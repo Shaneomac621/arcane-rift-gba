@@ -1,1 +1,41 @@
+name: Build ARCANE RIFT GBA
 
+on:
+
+  workflow_dispatch:
+
+  push:
+
+    branches: [main]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Check out source
+
+        uses: actions/checkout@v4
+
+      - name: Install GBA toolchain
+
+        run: |
+
+          sudo apt-get update
+
+          sudo apt-get install -y build-essential git
+
+          git clone --depth 1 https://github.com/devkitPro/buildscripts.git /tmp/buildscripts
+
+          echo "The GBA toolchain setup needs to be completed before compiling."
+
+      - name: Check source file
+
+        run: |
+
+          test -f main.c
+
+          echo "Source file found."
