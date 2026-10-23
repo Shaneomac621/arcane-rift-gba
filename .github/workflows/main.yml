@@ -8,6 +8,10 @@ on:
 
     branches: [main]
 
+permissions:
+
+  contents: read
+
 jobs:
 
   build:
@@ -20,22 +24,62 @@ jobs:
 
         uses: actions/checkout@v4
 
-      - name: Install GBA toolchain
+      - name: Compile GBA ROM
 
         run: |
 
-          sudo apt-get update
+          docker run --rm \
 
-          sudo apt-get install -y build-essential git
+            -v "$GITHUB_WORKSPACE:/work" \
 
-          git clone --depth 1 https://github.com/devkitPro/buildscripts.git /tmp/buildscripts
+            -w /work \
 
-          echo "The GBA toolchain setup needs to be completed before compiling."
+            devkitpro/devkitarm:latest \
 
-      - name: Check source file
+            bash -lc '
 
-        run: |
+              dkp-pacman -Sy --noconfirm gba-dev
 
-          test -f main.c
+              export DEVKITPRO=/opt/devkitpro
 
-          echo "Source file found."
+              export DEVKITARM=$DEVKITPRO/devkitARM
+
+              "$DEVKITARM/bin/arm-none-eabi-gcc" \
+
+                -mthumb -mthumb-interwork -mcpu=arm7tdmi \
+
+                -O2 -Wall \
+
+                -I"$DEVKITPRO/libgba/include" \
+
+                main.c \
+
+                -L"$DEVKITPRO/libgba/lib" \
+
+                -specs=gba.specs -lgba \
+
+                -o arcane-rift.elf
+
+              "$DEVKITARM/bin/arm-none-eabi-objcopy" \
+
+                -O binary arcane-rift.elf arcane-rift.gba
+
+              "$DEVKITARM/bin/gbafix" arcane-rift.gba \
+
+                -tARCANERIFT -cARCE -m00
+
+              test -s arcane-rift.gba
+
+            '
+
+      - name: Upload playable ROM
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: ARCANE-RIFT-GBA
+
+          path: arcane-rift.gba
+
+          if-no-files-found: error
