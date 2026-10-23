@@ -28,51 +28,9 @@ jobs:
 
         run: |
 
-          docker run --rm \
+          docker run --rm -v "$GITHUB_WORKSPACE:/work" -w /work devkitpro/devkitarm:latest bash -lc 'export PATH=/opt/devkitpro/devkitARM/bin:/opt/devkitpro/tools/bin:$PATH; arm-none-eabi-gcc -mthumb -mthumb-interwork -mcpu=arm7tdmi -O2 -Wall -I/opt/devkitpro/libgba/include main.c -L/opt/devkitpro/libgba/lib -specs=gba.specs -lgba -o arcane-rift.elf && arm-none-eabi-objcopy -O binary arcane-rift.elf arcane-rift.gba && gbafix arcane-rift.gba -tARCANERIFT -cARCE -m00 && test -s arcane-rift.gba'
 
-            -v "$GITHUB_WORKSPACE:/work" \
-
-            -w /work \
-
-            devkitpro/devkitarm:latest \
-
-            bash -lc '
-
-              dkp-pacman -Sy --noconfirm gba-dev
-
-              export DEVKITPRO=/opt/devkitpro
-
-              export DEVKITARM=$DEVKITPRO/devkitARM
-
-              "$DEVKITARM/bin/arm-none-eabi-gcc" \
-
-                -mthumb -mthumb-interwork -mcpu=arm7tdmi \
-
-                -O2 -Wall \
-
-                -I"$DEVKITPRO/libgba/include" \
-
-                main.c \
-
-                -L"$DEVKITPRO/libgba/lib" \
-
-                -specs=gba.specs -lgba \
-
-                -o arcane-rift.elf
-
-              "$DEVKITARM/bin/arm-none-eabi-objcopy" \
-
-                -O binary arcane-rift.elf arcane-rift.gba
-
-              "$DEVKITARM/bin/gbafix" arcane-rift.gba \
-
-                -tARCANERIFT -cARCE -m00
-
-              test -s arcane-rift.gba
-
-            '
-
-      - name: Upload playable ROM
+      - name: Upload GBA ROM
 
         uses: actions/upload-artifact@v4
 
